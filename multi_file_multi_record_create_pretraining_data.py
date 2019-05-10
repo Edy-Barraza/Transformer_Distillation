@@ -10,10 +10,15 @@ def main():
                         required=True,
                         help="(str) Absolute path to the directory containing the txt files that will be converted to tfrecords")
 
-    parser.add_argument("--output_file",
+    parser.add_argument("--output_dir",
                         type=str,
                         required=True,
-                        help="(str) Absolute path to the Output TF example file, or comma-separated list of files")
+                        help="(str) Absolute path to output TF example files")
+
+    parser.add_argument("--output_base_name",
+                        type=str,
+                        required=True,
+                        help="(str) name of base TFRecord file")
 
     parser.add_argument("--vocab_file",
                         type=str,
@@ -68,14 +73,17 @@ def main():
     if args.input_dir[-1] != "/":
         args.input_dir = args.input_dir + "/"
 
+    if args.output_dir[-1] != "/":
+        args.output_dir = args.output_dir + "/"
+
     if args.do_lower_case != "True":
         if args.do_lower_case != "False":
             print("do_lower_case must be True or False")
             exit()
 
-    for file in os.listdir(args.input_dir):
+    for dex, file in enumerate(os.listdir(args.input_dir)):
         sp.call("python create_pretraining_data.py " + \
-                " --output_file "+args.output_file + \
+                " --output_file "+args.output_dir + args.output_base_name + str(dex) + ".tfrecord" +\
                 " --vocab_file "+args.vocab_file+ \
                 " --do_lower_case " + args.do_lower_case + \
                 " --max_seq_length " + str(args.max_seq_length) + \

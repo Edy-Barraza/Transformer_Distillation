@@ -22,7 +22,7 @@ def main():
         for open_file_name in os.listdir(args.folder+folder+"/"):
 
             print(open_file_name)
-            with open(args.folder+folder+"/"+open_file_name,"r") as open_file:
+            with open(args.folder+folder+"/"+open_file_name, "r") as open_file:
                 for article in open_file:
                     json_obj = json.loads(article)
                     text = json_obj["text"]

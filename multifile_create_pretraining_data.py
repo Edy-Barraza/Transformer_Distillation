@@ -466,5 +466,8 @@ def main(_):
 
 
 if __name__ == "__main__":
+  flags.mark_flag_as_required("input_dir")
+  flags.mark_flag_as_required("output_dir")
+  flags.mark_flag_as_required("output_base_name")
   flags.mark_flag_as_required("vocab_file")
   tf.app.run()

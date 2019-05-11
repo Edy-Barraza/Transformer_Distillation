@@ -279,5 +279,8 @@ def main(_):
 
 
 if __name__ =="__main__":
+    flags.mark_flag_as_required("input_file")
+    flags.mark_flag_as_required("output_file")
+    flags.mark_flag_as_required("bert_config_file")
     tf.app.run()
 

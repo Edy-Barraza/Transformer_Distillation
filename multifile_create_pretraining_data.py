@@ -425,36 +425,16 @@ def main(_):
   rng = random.Random(FLAGS.random_seed)
   for dex, fname in enumerate(os.listdir(FLAGS.input_dir)):
 
-    print("file:")
-    print(FLAGS.input_dir + fname)
-    print("tf.gfile.glob:")
-    print(tf.gfile.Glob(FLAGS.input_dir + fname))
-    print("extend fucking list")
-    print([].extend(tf.gfile.Glob(FLAGS.input_dir + fname)))
-
-    print("")
-    print("output file:")
-    print(FLAGS.output_dir + FLAGS.output_base_name + "_" + str(dex) + ".tfrecord")
-    print("list attempt")
-    print([FLAGS.output_dir + FLAGS.output_base_name + "_" + str(dex) + ".tfrecord"])
-
-
     input_files = tf.gfile.Glob(FLAGS.input_dir + fname)
 
     tf.logging.info("*** Reading from input files ***")
     for input_file in input_files:
       tf.logging.info("  %s", input_file)
 
-
     instances = create_training_instances(
         input_files, tokenizer, FLAGS.max_seq_length, FLAGS.dupe_factor,
         FLAGS.short_seq_prob, FLAGS.masked_lm_prob, FLAGS.max_predictions_per_seq,
         rng)
-
-    print("output file:")
-    print(FLAGS.output_dir +FLAGS.output_base_name+"_"+str(dex)+".tfrecord")
-    print("list attempt")
-    print([].append(FLAGS.output_dir +FLAGS.output_base_name+"_"+str(dex)+".tfrecord"))
 
     output_files = [FLAGS.output_dir +FLAGS.output_base_name+"_"+str(dex)+".tfrecord"] #FLAGS.output_file.split(",")
     tf.logging.info("*** Writing to output files ***")

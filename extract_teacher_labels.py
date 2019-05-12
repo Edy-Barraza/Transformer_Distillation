@@ -216,7 +216,15 @@ def create_float_feature(values):
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
 
-    my_data = produce_dataset(input_files=FLAGS.input_file,
+    input_files = []
+    for input_pattern in FLAGS.input_file.split(","):
+        input_files.extend(tf.gfile.Glob(input_pattern))
+
+    tf.logging.info("*** Input Files ***")
+    for input_file in input_files:
+        tf.logging.info("  %s" % input_file)
+
+    my_data = produce_dataset(input_files=input_files,
                               max_seq_length=FLAGS.max_seq_length,
                               max_predictions_per_seq=FLAGS.max_predictions_per_seq,
                               batch_size=FLAGS.batch_size,

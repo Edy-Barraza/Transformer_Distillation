@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import os
 from bert import modeling
-from bert import optimization
+import optimization_distributed
 import tensorflow as tf
 
 import horovod.tensorflow as hvd
@@ -177,7 +177,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
 
     output_spec = None
     if mode == tf.estimator.ModeKeys.TRAIN:
-      train_op = optimization.create_optimizer(
+      train_op = optimization_distributed.create_optimizer(
           total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu)
 
       output_spec = tf.contrib.tpu.TPUEstimatorSpec(

@@ -107,8 +107,11 @@ Args:
     save_checkpoints_steps (int) : How often to save the model checkpoint
     iterations_per_loop (int) : How many steps to make in each estimator call
     max_eval_steps (int) : Maximum number of eval steps
-    
+```
 
+Now suppose you have a lil cluster of GPU's! If you have Horovod installed, you can perform some distributed training!!! (If you don't have horovod installed you can install it [here](https://github.com/horovod/horovod#install)). We shall run network_distillation_distributed_truncated.py to perform distributed training as such:
+
+```
 
 ```
 

@@ -63,7 +63,7 @@ Args:
 One possibility for performing knowledge distillation is to pass an input to the student and teacher networks at the same time and using the outputs of the teacher for the student to learn from. However, considering that this will put a strain on our RAM and that we will be making multiple runs through each of over our data, it is more resource efficient to run through all of our data once and save the output of our teacher network with the inputs that were fed to it. This is accomplished by running extract_teacher_labels_truncated.py
 
 ```
-python extract_teacher_labels_truncated.py --bert_config_file uncased_L-12_H-768_A-12/bert_config.json --data/record_intermed/wiki_intermed_0
+python extract_teacher_labels_truncated.py --bert_config_file uncased_L-12_H-768_A-12/bert_config.json --data/record_intermed/wiki_intermed_0.tfrecord --output_file data/record_distill/wiki_distill_0.tfrecord --truncation_factor 10 --init_checkpoint uncased_L-12_H-768_A-12/bert_model.ckpt 
 ```
 extract_teacher_labels_truncated.py has the following arguments:
 
@@ -71,7 +71,11 @@ extract_teacher_labels_truncated.py has the following arguments:
 Args:
     bert_config_file (str) : The config json file corresponding to the pre-trained BERT model. This specifies the model architecture
     input_file (str) : Input TF example files (can be a glob or comma separated)
-
+    output_file (str) : The output file that has transformer inputs and teacher outputs
+    truncation_factor (int) : Number of top probable words to save from teacher network output
+    init_checkpoint (str) : Initial checkpoint (usually from a pre-trained BERT model)
+    max_seq_length (int) : The maximum total input sequence length after WordPiece tokenization. Sequences longer than this will be truncated, and sequences shorter than this will be padded. Must match data generation
+    max_predictions_per_seq (int) : Maximum number of masked LM predictions per sequence. Must match data generation
 ```
     
  

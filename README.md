@@ -76,10 +76,39 @@ Args:
     init_checkpoint (str) : Initial checkpoint (usually from a pre-trained BERT model)
     max_seq_length (int) : The maximum total input sequence length after WordPiece tokenization. Sequences longer than this will be truncated, and sequences shorter than this will be padded. Must match data generation
     max_predictions_per_seq (int) : Maximum number of masked LM predictions per sequence. Must match data generation
+    batch_size (int) : Total batch size when processing sequences
 ```
-    
- 
-
 
 <h3>V. Distill Knowledge</h3>
+Now that we have our teacher outputs we can start training a student network! To run on a single machine run network_distillation_single_machine_truncated.py 
+
+```
+python network_distillation_single_machine_truncated.py --bert_config_file uncased_L-12_H-768_A-12/bert_config.json --input_file data/record_distill/wiki_distill_0.tfrecord --output_dir output_dir --truncation_factor 10 --do_train True --do_eval true --
+```
+
+network_distillation_single_machine_truncated.py has the following arguments:
+
+```
+Args:
+    bert_config_file (str) : The config json file corresponding to the pre-trained BERT model. This specifies the model architecture
+    input_file (str) : Input TF example files (can be a glob or comma separated)
+    output_dir (str) : The output directory where the model checkpoints will be written
+    init_checkpoint (str) : Initial checkpoint (usually from a pre-trained BERT model)
+    truncation_factor (int) : Number of top probable words to save from teacher network output
+    do_train (bool) : Whether to run training
+    do_eval (bool) : Whether to run eval on the dev set
+    max_seq_length (int) : The maximum total input sequence length after WordPiece tokenization. Sequences longer than this will be truncated, and sequences shorter than this will be padded. Must match data generation
+    max_predictions_per_seq (int) : Maximum number of masked LM predictions per sequence. Must match data generation
+    train_batch_size (int) : Total batch size for training
+    eval_batch_size (int) Total batch size for eval
+    learning_rate (float) : The initial learning rate for Adam
+    num_train_steps (int) : Number of training steps
+    num_warmup_steps (int) Number of warmup steps
+    save_checkpoints_steps (int) : How often to save the model checkpoint
+    iterations_per_loop (int) : How many steps to make in each estimator call
+    max_eval_steps (int) : Maximum number of eval steps
+    
+
+
+```
 

@@ -32,3 +32,25 @@ Args:
     folder (str) : the path where the split txt files will be placed
     name_base (str) : the base name of the split txt files. files will be named as such: base_name_N where N is a number
 ```
+
+After splitting Wikipedia into smaller txt files, we can turn all of them into tfrecord files by running multifile_create_pretraining_data.py
+
+```
+python multifile_create_pretraining_data.py --input_dir data/split_dir/ --output_dir data/record_intermed --output_base_name wiki_intermed --vocab_file uncased_L-12_H-768_A-12/vocab.txt
+```
+multifile_create_pretraining_data.py has the following arguments:
+
+```
+Args:
+    input_dir (str) : Input directory of raw text files
+    output_dir (str) : Output directory for created tfrecord files
+    output_base_name (str) : Output base name for TF example files
+    vocab_file (str) : The vocabulary file that the BERT model was trained on
+    do_lower_case (bool) : Whether to lower case the input text. Should be True for uncased models and False for cased models
+    max_seq_length (int) : Maximum sequence length
+    max_predictions_per_seq (int) : Maximum number of masked LM predictions per sequence
+    random_seed (int) : Random seed for data generation
+    dupe_factor (int) : Number of times to duplicate the input data (with different masks)
+    masked_lm_prob (float) : Masked LM probability
+    short_seq_prob (float) : Probability of creating sequences which are shorter than the maximum length
+```

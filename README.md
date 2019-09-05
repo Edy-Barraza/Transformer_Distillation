@@ -12,16 +12,21 @@ Using this repository for knowledge distillation is a 5-stage processes outlined
         <li> Prepare Text For TensorFlow </li>
         <li> Extract Teacher Neural Network Outputs </li>
         <li> Distill Knowledge </li>
+        <li> Single-Node Distributed Distillation </li>
+        <li> Multi-Node Distributed Distillation </li>
     </b>
 </ol>
 
 <h3> Download Pretrained Model </h3>
-In order to distill knowledge from a large pretrained transformer model, we need to first download that model! Links to these models are available in Google's original [BERT release repository readme](https://github.com/google-research/bert/blob/master/README.md) . For the purpose of this readme, we will assume you have downloaded BERT-Base Uncased (12-layer, 768-hidden, 12-heads, 110M parameters )within this repository. 
+
+In order to distill knowledge from a large pretrained transformer model, we need to first download that model! Links to these models are available in Google's original [BERT release repository readme](https://github.com/google-research/bert/blob/master/README.md). For the purpose of this readme, we will assume you have downloaded BERT-Base Uncased (12-layer, 768-hidden, 12-heads, 110M parameters )within this repository. 
 
 <h3>II. Extract Wikipedia</h3>
+
 To extract the Wikipedia Corpus, follow the instructions outlined in [this](https://github.com/Edy-Barraza/Transformer_Distillation/tree/master/extract_wikipedia_for_bert) part of the repository. 
 
 <h3> III. Prepare Text For TensorFlow </h3>
+
 After extracting Wikipedia, you should have a txt file of ~12GB in size. To prepare this text for TensorFlow, we must turn it into a tfrecord file. tfrecord files allow us to work with a dataset when we can't load all of it onto RAM. As an intermediary step, we must first slit this file into smaller ones in order not to run into RAM or disk space problems later down the line. Thus we must run split_text.py
 
 ```
@@ -64,6 +69,7 @@ Args:
 ```
 
 <h3>IV. Extract Teacher Neural Network Outputs</h3>
+
 One possibility for performing knowledge distillation is to pass an input to the student and teacher networks at the same time and using the outputs of the teacher for the student to learn from. However, considering that this will put a strain on our RAM and that we will be making multiple runs through each of over our data, it is more resource efficient to run through all of our data once and save the output of our teacher network with the inputs that were fed to it. This is accomplished by running extract_teacher_labels_truncated.py
 
 ```
@@ -89,6 +95,7 @@ Args:
 ```
 
 <h3>V. Distill Knowledge</h3>
+
 Now that we have our teacher outputs we can start training a student network! To run on a single machine run network_distillation_single_machine_truncated.py 
 
 ```
@@ -123,6 +130,8 @@ Args:
     iterations_per_loop (int) : How many steps to make in each estimator call
     max_eval_steps (int) : Maximum number of eval steps
 ```
+
+<h3>VI. Single-Node Distributed Distillation </h3>
 
 Now suppose you have a lil cluster of 8 GPU's! If you have Horovod installed, you can perform some distributed training!!! (If you don't have horovod installed you can install it [here](https://github.com/horovod/horovod#install)). We shall run network_distillation_distributed_truncated.py to perform distributed training as such:
 
@@ -165,3 +174,4 @@ Args:
     max_eval_steps (int) : Maximum number of eval steps
 ```
 
+<h3>VII. Multi-Node Distributed Distillation </h3>

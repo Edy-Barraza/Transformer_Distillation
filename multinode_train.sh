@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: MIT-0
 
 # Specify hosts in the file `hosts`, ensure that the number of slots is equal to the number of GPUs on that host
 

@@ -180,11 +180,13 @@ Suppose you have a boatload of credits on AWS... Now I can explain how to run di
 
 Here is a summary of the process:
 <ol type="i">
+  <b>
   <li>Create IAM Role</li>
   <li>Create Security Group</li>
   <li>Initialize Leader</li>
   <li>Launch Workers</li>
   <li>Finalize Leader</li>
+    </b>
 </ol>  
 
 <h4> i. Create IAM Role </h4>

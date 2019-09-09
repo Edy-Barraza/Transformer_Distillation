@@ -4,7 +4,7 @@
 Distill the knowledge of Google's BERT transformer language model into a smaller transformer. A blog post on the topic can be found 
 [here](https://edy-barraza.github.io/week12/).
 
-Using this repository for knowledge distillation is a 5-stage processes outlined as such:
+Using this repository for knowledge distillation is a 5-stage processes with a couple options to do distributed training. Here is an outline:
 <ol type="I">
     <b>
         <li> Download Pretrained Model</li>

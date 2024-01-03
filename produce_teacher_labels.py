@@ -25,6 +25,10 @@ flags.DEFINE_string(
     "output_file", None,
     "The output directory where the model checkpoints will be written.")
 
+flags.DEFINE_integer("truncation_factor", 0,
+                     "Number of top probable words to save from teacher network output; "
+                     "If truncation factor is zero, don't truncate any softmax values, keep the whole distribution")
+
 ## Other parameters
 flags.DEFINE_string(
     "init_checkpoint", None,
@@ -93,7 +97,7 @@ def produce_dataset(input_files,
     return d
 
 
-def get_masked_lm_output(bert_config, input_tensor, output_weights, positions):
+def get_masked_lm_output(bert_config, input_tensor, output_weights, positions, truncation_factor):
   """Get loss and log probs for the masked LM."""
   input_tensor = gather_indexes(input_tensor, positions)
 
@@ -117,9 +121,13 @@ def get_masked_lm_output(bert_config, input_tensor, output_weights, positions):
         initializer=tf.zeros_initializer())
     logits = tf.matmul(input_tensor, output_weights, transpose_b=True)
     logits = tf.nn.bias_add(logits, output_bias)
-    masked_lm_probs = tf.nn.softmax(logits,axis=-1)
+    masked_lm_probs = tf.nn.softmax(logits, axis=-1)
 
-  return masked_lm_probs
+    if truncation_factor:
+        masked_lm_probs, top_indices = tf.math.top_k(masked_lm_probs, k=truncation_factor, sorted=False)
+        return masked_lm_probs, top_indices
+    else:
+        return masked_lm_probs, 0
 
 
 def get_next_sentence_output(bert_config, input_tensor):
@@ -159,7 +167,7 @@ def gather_indexes(sequence_tensor, positions):
   return output_tensor
 
 
-def model_fn(features, bert_config, init_checkpoint):  # pylint: disable=unused-argument
+def model_fn(features, bert_config, init_checkpoint, truncation_factor):  # pylint: disable=unused-argument
 
     """The `model_fn` for TPUEstimator."""
 
@@ -180,10 +188,11 @@ def model_fn(features, bert_config, init_checkpoint):  # pylint: disable=unused-
         token_type_ids=segment_ids,
         use_one_hot_embeddings=False)
 
-    masked_lm_log_probs = get_masked_lm_output(bert_config,
+    trunc_masked_lm_probs, top_indices = get_masked_lm_output(bert_config,
                                                model.get_sequence_output(),
                                                model.get_embedding_table(),
-                                               masked_lm_positions)
+                                               masked_lm_positions,
+                                               truncation_factor)
 
     tvars = tf.trainable_variables()
 
@@ -201,7 +210,7 @@ def model_fn(features, bert_config, init_checkpoint):  # pylint: disable=unused-
         init_string = ", *INIT_FROM_CKPT*"
       tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
                       init_string)
-    return masked_lm_log_probs
+    return trunc_masked_lm_probs, top_indices
 
 def create_int_feature(values):
   feature = tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
@@ -235,7 +244,7 @@ def main(_):
 
     bert_config = modeling.BertConfig.from_json_file(FLAGS.bert_config_file)
 
-    masked_lm_prob = model_fn(text_feature, bert_config, FLAGS.init_checkpoint)
+    trunc_masked_lm_prob, top_indices = model_fn(text_feature, bert_config, FLAGS.init_checkpoint,FLAGS.truncation_factor)
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
@@ -243,7 +252,7 @@ def main(_):
 
         while True:
             try:
-                feat, mask_lm_prob = sess.run([text_feature, masked_lm_prob])
+                feat, mask_lm_prob, top_k_indices = sess.run([text_feature, trunc_masked_lm_prob, top_indices])
 
                 input_ids = feat["input_ids"]
                 input_mask = feat["input_mask"]
@@ -268,7 +277,13 @@ def main(_):
 
                     #retrieve predictions for (pred_per_seq) number of words, and flatten
                     distribution = mask_lm_prob[i*pred_per_seq:(i+1)*pred_per_seq].reshape(-1)
-                    new_feat["masked_lm_probs"] = create_float_feature(distribution)
+
+                    if top_k_indices:
+                        new_feat["truncated_masked_lm_probs"] = create_float_feature(distribution)
+                        top_k_dex = top_k_indices[i*pred_per_seq:(i+1)*pred_per_seq].reshape(-1)
+                        new_feat["top_k_indices"] = create_int_feature(top_k_dex)
+                    else:
+                        new_feat["masked_lm_probs"] = create_float_feature(distribution)
 
                     tf_example = tf.train.Example(features=tf.train.Features(feature=new_feat))
                     writer.write(tf_example.SerializeToString())

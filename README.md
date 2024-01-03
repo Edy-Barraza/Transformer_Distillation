@@ -19,39 +19,23 @@ Using this repository for knowledge distillation is a 5-stage processes with a c
 
 <h3> Download Pretrained Model </h3>
 
-In order to distill knowledge from a large pretrained transformer model, we need to first download that model! Links to these models are available in Google's original [BERT release repository readme](https://github.com/google-research/bert/blob/master/README.md). For the purpose of this readme, we will assume you have downloaded BERT-Base Uncased (12-layer, 768-hidden, 12-heads, 110M parameters )within this repository. 
+In order to distill knowledge from a large pretrained transformer model, we need to first download that model! Links to these models are available in Google's original [BERT release repository readme](https://github.com/google-research/bert/blob/master/README.md). For the purpose of this readme, we will assume you have downloaded BERT-Base Uncased (12-layer, 768-hidden, 12-heads, 110M parameters ) within this repository. 
 
 <h3>II. Extract Wikipedia</h3>
 
-To extract the Wikipedia Corpus, follow the instructions outlined in [this](https://github.com/Edy-Barraza/Transformer_Distillation/tree/master/extract_wikipedia_for_bert) part of the repository. 
+We will use Wikipedia in our training data. To extract the Wikipedia Corpus, follow the instructions outlined in [this](https://github.com/Edy-Barraza/Transformer_Distillation/tree/master/extract_wikipedia_for_bert) part of the repository. This will ultimately produce a directory of many managable txt files containing Wikipedia!
 
 <h3> III. Prepare Text For TensorFlow </h3>
-
-After extracting Wikipedia, you should have a txt file of ~12GB in size. To prepare this text for TensorFlow, we must turn it into a tfrecord file. tfrecord files allow us to work with a dataset when we can't load all of it onto RAM. As an intermediary step, we must first slit this file into smaller ones in order not to run into RAM or disk space problems later down the line. Thus we must run split_text.py
-
-```
-python split_text.py --read_file wikipedia.txt --split_number 20 --folder data/split_dir --name_base wiki_split
-```
-split_text.py has the following arguments:
+We can turn our Wikipedia txt files into tfrecord files with masked tokens by running create_pretraining_data.py
 
 ```
-Args:
-    read_file (str) : the txt file that will be split
-    split_number (int) : the number of smaller txt files that will be created
-    folder (str) : the path where the split txt files will be placed
-    name_base (str) : the base name of the split txt files. files will be named as such: base_name_N where N is a number
-```
-
-After splitting Wikipedia into smaller txt files, we can turn all of them into tfrecord files by running multifile_create_pretraining_data.py
-
-```
-python multifile_create_pretraining_data.py \
+python create_pretraining_data.py \
     --input_dir data/split_dir/ \
     --output_dir data/record_intermed \
     --output_base_name wiki_intermed \
     --vocab_file uncased_L-12_H-768_A-12/vocab.txt
 ```
-multifile_create_pretraining_data.py has the following arguments:
+create_pretraining_data.py has the following arguments:
 
 ```
 Args:
@@ -70,10 +54,10 @@ Args:
 
 <h3>IV. Extract Teacher Neural Network Outputs</h3>
 
-One possibility for performing knowledge distillation is to pass an input to the student and teacher networks at the same time and using the outputs of the teacher for the student to learn from. However, considering that this will put a strain on our RAM and that we will be making multiple runs through each of over our data, it is more resource efficient to run through all of our data once and save the output of our teacher network with the inputs that were fed to it. This is accomplished by running extract_teacher_labels_truncated.py
+One possibility for performing knowledge distillation is to pass an input to the student and teacher networks at the same time and using the outputs of the teacher for the student to learn from. However, considering that this will put a strain on our RAM and that we will be making multiple runs through each of over our data, it is more resource efficient to run through all of our data once and save the output of our teacher network with the inputs that were fed to it. This is accomplished by running produce_teacher_labels.py . The teacher labels are BERT's predicted softmax distribution over it's vocabulary for any given masked token. Given that BERT's vocabulary is ~30,000 in size, I experimented with truncating with the top K probabilities, which proved to degrade performance. Alas, I will keep this functionality with the `truncation_factor` argument in hopes that it will be useful to someone one day. 
 
 ```
-python extract_teacher_labels_truncated.py \
+python produce_teacher_labels.py \
     --bert_config_file uncased_L-12_H-768_A-12/bert_config.json \
     --data/record_intermed/wiki_intermed_0.tfrecord \
     --output_file data/record_distill/wiki_distill_0.tfrecord \
@@ -87,7 +71,7 @@ Args:
     bert_config_file (str) : The config json file corresponding to the pre-trained BERT model. This specifies the model architecture
     input_file (str) : Input TF example files (can be a glob or comma separated)
     output_file (str) : The output file that has transformer inputs and teacher outputs
-    truncation_factor (int) : Number of top probable words to save from teacher network output
+    truncation_factor (int) : Number of top probable words to save from teacher network output. If `0`, the whole softmax distribution is saved
     init_checkpoint (str) : Initial checkpoint (usually from a pre-trained BERT model)
     max_seq_length (int) : The maximum total input sequence length after WordPiece tokenization. Sequences longer than this will be truncated, and sequences shorter than this will be padded. Must match data generation
     max_predictions_per_seq (int) : Maximum number of masked LM predictions per sequence. Must match data generation
